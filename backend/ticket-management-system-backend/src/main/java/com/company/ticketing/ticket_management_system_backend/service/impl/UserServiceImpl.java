@@ -7,7 +7,7 @@ import com.company.ticketing.ticket_management_system_backend.service.UserServic
 import org.springframework.stereotype.Service;
 import  com.company.ticketing.ticket_management_system_backend.enums.UserStatus;
 import java.util.List;
-import java.util.Optional;
+import com.company.ticketing.ticket_management_system_backend.config.security.jwt.JwtUtil;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -18,10 +18,13 @@ public class UserServiceImpl implements UserService {
     private final  UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final JwtUtil jwtUtil;
 
-    public  UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder){
+
+    public  UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,JwtUtil jwtUtil){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
     @Override
     public  User registerUser(User user){
@@ -76,22 +79,22 @@ public class UserServiceImpl implements UserService {
    }
 
    @Override
-   public  User login(String email, String password){
+   public  String login(String email, String password){
 
        User user = userRepository.findByEmail(email);
        if(user==null){
            throw new RuntimeException("user not found");
        }
-       if(user.getStatus()==UserStatus.ACTIVE){
-
-       }else {
+       if (user.getStatus() != UserStatus.ACTIVE) {
            throw new RuntimeException("user not allowed");
        }
+
        if (!passwordEncoder.matches(password, user.getPassword())) {
            throw new RuntimeException("wrong email or password");
        }
 
-       return  user;
+       return jwtUtil.generateToken(user);
+
    }
 
 
