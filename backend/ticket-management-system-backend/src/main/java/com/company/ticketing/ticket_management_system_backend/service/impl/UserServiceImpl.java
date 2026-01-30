@@ -1,0 +1,100 @@
+package com.company.ticketing.ticket_management_system_backend.service.impl;
+
+import com.company.ticketing.ticket_management_system_backend.entity.User;
+import com.company.ticketing.ticket_management_system_backend.enums.UserRole;
+import com.company.ticketing.ticket_management_system_backend.repository.UserRepository;
+import com.company.ticketing.ticket_management_system_backend.service.UserService;
+import org.springframework.stereotype.Service;
+import  com.company.ticketing.ticket_management_system_backend.enums.UserStatus;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+
+@Service
+public class UserServiceImpl implements UserService {
+
+    private final  UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+
+    public  UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder){
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+    @Override
+    public  User registerUser(User user){
+
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(UserRole.EMPLOYEE);
+        user.setStatus(UserStatus.PENDING);
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    public List<User> getPendingUsers(){
+
+        return  userRepository.findAllByStatus(UserStatus.PENDING);
+    }
+
+    @Override
+    public   User approveUser(Long userId){
+       User user = userRepository.
+               findById(userId).orElseThrow(()->new RuntimeException("user not found"));
+
+        if(user.getStatus()!=UserStatus.PENDING){
+            throw new RuntimeException();
+        }
+        user.setStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
+        return user;
+
+    }
+
+    @Override
+   public  User rejectUser(Long userId){
+        User user = userRepository.
+                findById(userId).orElseThrow(()->new RuntimeException("user not found"));
+        if(user.getStatus()!=UserStatus.PENDING){
+            throw new RuntimeException();
+        }
+        user.setStatus(UserStatus.REJECTED);
+        userRepository.save(user);
+        return user;
+   }
+
+   @Override
+    public  User getUserById(Long userId){
+
+        return  userRepository.findById(userId).orElseThrow(()->new RuntimeException("user not found"));
+   }
+
+   @Override
+   public  User login(String email, String password){
+
+       User user = userRepository.findByEmail(email);
+       if(user==null){
+           throw new RuntimeException("user not found");
+       }
+       if(user.getStatus()==UserStatus.ACTIVE){
+
+       }else {
+           throw new RuntimeException("user not allowed");
+       }
+       if(user.getPassword().equals(password)){
+
+       }else {
+           throw new RuntimeException("wrong email or password");
+       }
+    return  user;
+   }
+
+
+
+}
