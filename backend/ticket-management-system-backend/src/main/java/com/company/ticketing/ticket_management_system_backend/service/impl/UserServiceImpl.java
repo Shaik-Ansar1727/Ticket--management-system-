@@ -87,12 +87,11 @@ public class UserServiceImpl implements UserService {
        }else {
            throw new RuntimeException("user not allowed");
        }
-       if(user.getPassword().equals(password)){
-
-       }else {
+       if (!passwordEncoder.matches(password, user.getPassword())) {
            throw new RuntimeException("wrong email or password");
        }
-    return  user;
+
+       return  user;
    }
 
 

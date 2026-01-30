@@ -15,6 +15,9 @@ public class AdminBootstrap implements  CommandLineRunner {
     private final  UserRepository userRepository;
     private  final PasswordEncoder passwordEncoder;
 
+
+
+
     public  AdminBootstrap(UserRepository userRepository, PasswordEncoder passwordEncoder){
         this.userRepository= userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -26,7 +29,10 @@ public class AdminBootstrap implements  CommandLineRunner {
     boolean adminExists = userRepository.existsByRole(UserRole.ADMIN);
 
 
+
+
         if (adminExists) {
+
             System.out.println("Admin already exists. Skipping bootstrap.");
             return;
         }
@@ -42,6 +48,9 @@ public class AdminBootstrap implements  CommandLineRunner {
         userRepository.save(admin);
 
         System.out.println("Default admin created.");
+
+
+
 
     }
 }
