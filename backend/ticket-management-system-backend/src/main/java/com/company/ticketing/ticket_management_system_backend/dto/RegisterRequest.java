@@ -1,0 +1,31 @@
+package com.company.ticketing.ticket_management_system_backend.dto;
+
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+
+public class RegisterRequest {
+
+    @Email
+    @NotBlank
+    private String email;
+
+    @NotBlank
+    @Size(min = 6)
+    private String password;
+
+    @NotBlank
+    private String username;
+
+    @NotBlank
+    private String displayPicture;
+
+    private String bio;
+
+}

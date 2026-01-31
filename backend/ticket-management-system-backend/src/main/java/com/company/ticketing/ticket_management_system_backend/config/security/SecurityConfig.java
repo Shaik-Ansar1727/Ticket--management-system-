@@ -10,14 +10,13 @@ import com.company.ticketing.ticket_management_system_backend.config.security.jw
 import com.company.ticketing.ticket_management_system_backend.config.security.jwt.JwtUtil;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.config.Customizer;
 
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
