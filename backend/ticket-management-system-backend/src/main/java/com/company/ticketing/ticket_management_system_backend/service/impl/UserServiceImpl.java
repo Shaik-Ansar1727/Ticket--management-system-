@@ -1,5 +1,6 @@
 package com.company.ticketing.ticket_management_system_backend.service.impl;
 
+import com.company.ticketing.ticket_management_system_backend.dto.UserResponse;
 import com.company.ticketing.ticket_management_system_backend.entity.User;
 import com.company.ticketing.ticket_management_system_backend.enums.UserRole;
 import com.company.ticketing.ticket_management_system_backend.repository.UserRepository;
@@ -94,6 +95,20 @@ public class UserServiceImpl implements UserService {
        }
 
        return jwtUtil.generateToken(user);
+
+   }
+
+
+   public UserResponse mapToUserResponse(User user) {
+       UserResponse userResponse = new UserResponse();
+       userResponse.setId(user.getId());
+       userResponse.setUsername(user.getUsername());
+       userResponse.setEmail(user.getEmail());
+       userResponse.setRole(user.getRole().name());
+       userResponse.setStatus(user.getStatus().name());
+       userResponse.setBio(user.getBio());
+       userResponse.setDisplayPicture(user.getDisplayPicture());
+       return userResponse;
 
    }
 
