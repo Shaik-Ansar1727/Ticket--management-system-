@@ -7,7 +7,6 @@ import com.company.ticketing.ticket_management_system_backend.dto.RegisterReques
 import com.company.ticketing.ticket_management_system_backend.entity.User;
 import com.company.ticketing.ticket_management_system_backend.service.UserService;
 import jakarta.validation.Valid;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

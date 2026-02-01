@@ -3,8 +3,10 @@ package com.company.ticketing.ticket_management_system_backend.controller;
 
 import com.company.ticketing.ticket_management_system_backend.dto.CreateTicketRequest;
 import com.company.ticketing.ticket_management_system_backend.dto.TicketResponse;
+import com.company.ticketing.ticket_management_system_backend.dto.TicketStatusHistoryResponse;
 import com.company.ticketing.ticket_management_system_backend.dto.UpdateTicketStatusRequest;
 import com.company.ticketing.ticket_management_system_backend.entity.Ticket;
+import com.company.ticketing.ticket_management_system_backend.entity.TicketStatusHistory;
 import com.company.ticketing.ticket_management_system_backend.enums.TicketStatus;
 import com.company.ticketing.ticket_management_system_backend.service.TicketService;
 import jakarta.validation.Valid;
@@ -124,6 +126,23 @@ public class TicketController {
                 ticket.getAttachments()
         );
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping ("/{ticketId}/status-history" )
+    public  ResponseEntity<List<TicketStatusHistoryResponse>> getTicketStatusHistory(
+            @PathVariable Long ticketId){
+        List<TicketStatusHistory> historyList = ticketService.getTicketStatusHistory(ticketId);
+        List<TicketStatusHistoryResponse> response = historyList.stream()
+                .map(history -> new TicketStatusHistoryResponse(
+                        history.getOldStatus(),
+                        history.getNewStatus(),
+                        history.getChangedBy().getUsername(),
+                        history.getChangedAt()
+                ))
+                .toList();
+
+
+        return  ResponseEntity.ok(response);
     }
 
 

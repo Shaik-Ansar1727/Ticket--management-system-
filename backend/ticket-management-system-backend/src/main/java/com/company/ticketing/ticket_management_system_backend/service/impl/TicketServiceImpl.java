@@ -2,11 +2,13 @@ package com.company.ticketing.ticket_management_system_backend.service.impl;
 
 import com.company.ticketing.ticket_management_system_backend.dto.CreateTicketRequest;
 import com.company.ticketing.ticket_management_system_backend.entity.Ticket;
+import com.company.ticketing.ticket_management_system_backend.entity.TicketStatusHistory;
 import com.company.ticketing.ticket_management_system_backend.entity.User;
 import com.company.ticketing.ticket_management_system_backend.enums.TicketLabel;
 import com.company.ticketing.ticket_management_system_backend.enums.TicketStatus;
 import com.company.ticketing.ticket_management_system_backend.enums.UserStatus;
 import com.company.ticketing.ticket_management_system_backend.repository.TicketRepository;
+import com.company.ticketing.ticket_management_system_backend.repository.TicketStatusHistoryRepository;
 import com.company.ticketing.ticket_management_system_backend.repository.UserRepository;
 import com.company.ticketing.ticket_management_system_backend.service.TicketService;
 import org.springframework.security.core.Authentication;
@@ -21,10 +23,12 @@ public class TicketServiceImpl implements TicketService {
 
     private  final TicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private  final TicketStatusHistoryRepository ticketStatusHistoryRepository;
 
-    public TicketServiceImpl(TicketRepository ticketRepository, UserRepository userRepository) {
+    public TicketServiceImpl(TicketRepository ticketRepository, UserRepository userRepository, TicketStatusHistoryRepository ticketStatusHistoryRepository) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
+        this.ticketStatusHistoryRepository= ticketStatusHistoryRepository;
     }
 
 
@@ -109,30 +113,67 @@ public class TicketServiceImpl implements TicketService {
         }
 
 
-        TicketStatus currentStatus = ticket.getStatus();
+
+
+        TicketStatus oldStatus = ticket.getStatus();
+
+        if (!isValidTransition(oldStatus, newStatus, isAdmin)) {
+            throw new RuntimeException("Invalid status transition");
+        }
+
+        ticket.setStatus(newStatus);
+        ticketRepository.save(ticket);
+
+        TicketStatusHistory history = new TicketStatusHistory();
+        history.setTicket(ticket);
+        history.setOldStatus(oldStatus);
+        history.setNewStatus(newStatus);
+        history.setChangedBy(loggedInUser);
+
+        ticketStatusHistoryRepository.save(history);
+
+        return ticket;
+
+
+
+    }
+
+
+    private boolean isValidTransition(
+            TicketStatus oldStatus,
+            TicketStatus newStatus,
+            boolean isAdmin
+    ) {
 
         if (
-                (currentStatus == TicketStatus.TODO && newStatus == TicketStatus.IN_PROGRESS) ||
-                        (currentStatus == TicketStatus.IN_PROGRESS && newStatus == TicketStatus.PAUSED) ||
-                        (currentStatus == TicketStatus.PAUSED && newStatus == TicketStatus.IN_PROGRESS) ||
-                        (currentStatus == TicketStatus.IN_PROGRESS && newStatus == TicketStatus.PR_REVIEW)
+                (oldStatus == TicketStatus.TODO && newStatus == TicketStatus.IN_PROGRESS) ||
+                        (oldStatus == TicketStatus.IN_PROGRESS && newStatus == TicketStatus.PAUSED) ||
+                        (oldStatus == TicketStatus.PAUSED && newStatus == TicketStatus.IN_PROGRESS) ||
+                        (oldStatus == TicketStatus.IN_PROGRESS && newStatus == TicketStatus.PR_REVIEW)
         ) {
-            ticket.setStatus(newStatus);
-            return ticketRepository.save(ticket);
+            return true;
         }
+
 
         if (isAdmin &&
                 (
-                        (currentStatus == TicketStatus.PR_REVIEW && newStatus == TicketStatus.READY_TO_DEPLOY) ||
-                                (currentStatus == TicketStatus.READY_TO_DEPLOY && newStatus == TicketStatus.DEPLOYED_DONE)
+                        (oldStatus == TicketStatus.PR_REVIEW && newStatus == TicketStatus.READY_TO_DEPLOY) ||
+                                (oldStatus == TicketStatus.READY_TO_DEPLOY && newStatus == TicketStatus.DEPLOYED_DONE)
                 )
         ) {
-            ticket.setStatus(newStatus);
-            return ticketRepository.save(ticket);
+            return true;
         }
 
-        throw new RuntimeException("Invalid status transition");
+        return false;
     }
+
+    public  List<TicketStatusHistory> getTicketStatusHistory(Long ticketId){
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        return ticketStatusHistoryRepository.findStatusHistoryByTicket(ticket);
+    }
+
 
 
 }

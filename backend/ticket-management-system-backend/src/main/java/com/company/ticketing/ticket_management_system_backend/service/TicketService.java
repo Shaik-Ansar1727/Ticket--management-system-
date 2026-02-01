@@ -3,6 +3,7 @@ package com.company.ticketing.ticket_management_system_backend.service;
 import com.company.ticketing.ticket_management_system_backend.dto.CreateTicketRequest;
 import com.company.ticketing.ticket_management_system_backend.dto.TicketResponse;
 import com.company.ticketing.ticket_management_system_backend.entity.Ticket;
+import com.company.ticketing.ticket_management_system_backend.entity.TicketStatusHistory;
 import com.company.ticketing.ticket_management_system_backend.enums.TicketLabel;
 import com.company.ticketing.ticket_management_system_backend.enums.TicketStatus;
 
@@ -21,4 +22,5 @@ public interface TicketService {
 
     Ticket updateTicketStatus(Long ticketId, TicketStatus newStatus);
 
+    List<TicketStatusHistory> getTicketStatusHistory(Long ticketId);
 }

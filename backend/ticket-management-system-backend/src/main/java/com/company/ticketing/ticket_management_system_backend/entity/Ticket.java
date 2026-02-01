@@ -20,43 +20,43 @@ public class Ticket {
 
             @Id
             @GeneratedValue(strategy = GenerationType.IDENTITY)
-            Long id;
+            private Long id;
 
             @Column(nullable = false)
-            String title;
+            private String title;
 
             @Column(nullable = false)
-            String description;
-
-            @Enumerated(EnumType.STRING)
-            @Column(nullable = false)
-            TicketLabel label;
+            private  String description;
 
             @Enumerated(EnumType.STRING)
             @Column(nullable = false)
-            TicketStatus status;
+            private TicketLabel label;
+
+            @Enumerated(EnumType.STRING)
+            @Column(nullable = false)
+            private TicketStatus status;
 
             @ManyToOne
             @JoinColumn(name = "created_by_id", nullable = false)
-             User createdBy;
+            private User createdBy;
 
 
             @ManyToOne
             @JoinColumn(name = "assigned_to_id")
-            User assignedTo;
+            private User assignedTo;
 
             @Column(updatable = false, insertable = true)
             @CreationTimestamp
-            LocalDateTime createdAt;
+            private LocalDateTime createdAt;
 
             @Column(updatable = true)
             @UpdateTimestamp
-            LocalDateTime updatedAt;
+            private LocalDateTime updatedAt;
 
             @Column(name = "attachment")
             @ElementCollection
             @CollectionTable(name = "ticket_attachments", joinColumns = @JoinColumn(name = "ticket_id"))
-            List<String> attachments;
+            private List<String> attachments;
 
 
 }
