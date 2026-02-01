@@ -1,11 +1,9 @@
 package com.company.ticketing.ticket_management_system_backend.controller;
 
 
-import com.company.ticketing.ticket_management_system_backend.dto.CreateTicketRequest;
-import com.company.ticketing.ticket_management_system_backend.dto.TicketResponse;
-import com.company.ticketing.ticket_management_system_backend.dto.TicketStatusHistoryResponse;
-import com.company.ticketing.ticket_management_system_backend.dto.UpdateTicketStatusRequest;
+import com.company.ticketing.ticket_management_system_backend.dto.*;
 import com.company.ticketing.ticket_management_system_backend.entity.Ticket;
+import com.company.ticketing.ticket_management_system_backend.entity.TicketComment;
 import com.company.ticketing.ticket_management_system_backend.entity.TicketStatusHistory;
 import com.company.ticketing.ticket_management_system_backend.enums.TicketStatus;
 import com.company.ticketing.ticket_management_system_backend.service.TicketService;
@@ -143,6 +141,36 @@ public class TicketController {
 
 
         return  ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{ticketId}/comments")
+    public ResponseEntity<TicketCommentResponse> addComment(
+            @PathVariable Long ticketId,
+            @Valid @RequestBody AddCommentRequest request) {
+
+        TicketComment ticketComment = ticketService.addComment(ticketId, request.getContent());
+
+          TicketCommentResponse response = new TicketCommentResponse(
+                  ticketComment.getContent(),
+                  ticketComment.getAuthor().getUsername(),
+                    ticketComment.getCreatedAt()
+          );
+
+          return  ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{ticketId}/comments")
+    public ResponseEntity<List<TicketCommentResponse>> getCommentsForTicket(
+            @PathVariable Long ticketId) {
+        List<TicketComment> comments = ticketService.getCommentsForTicket(ticketId);
+        List<TicketCommentResponse> responses = comments.stream()
+                .map(comment -> new TicketCommentResponse(
+                        comment.getContent(),
+                        comment.getAuthor().getUsername(),
+                        comment.getCreatedAt()
+                ))
+                .toList();
+        return ResponseEntity.ok(responses);
     }
 
 
