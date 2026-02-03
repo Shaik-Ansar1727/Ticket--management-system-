@@ -19,6 +19,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable());
 
@@ -36,6 +37,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/users/**").hasAnyRole("ADMIN", "EMPLOYEE")
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/tickets/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 );
 

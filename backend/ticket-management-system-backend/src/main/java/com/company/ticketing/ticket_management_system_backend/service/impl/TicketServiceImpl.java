@@ -146,20 +146,28 @@ public class TicketServiceImpl implements TicketService {
             boolean isAdmin
     ) {
 
+        if (oldStatus == TicketStatus.DEPLOYED_DONE) {
+            return false;
+        }
+
         if (
+                newStatus == TicketStatus.READY_TO_DEPLOY ||
+                        newStatus == TicketStatus.DEPLOYED_DONE
+        ) {
+            return isAdmin &&
+                    (
+                            (oldStatus == TicketStatus.PR_REVIEW && newStatus == TicketStatus.READY_TO_DEPLOY) ||
+                                    (oldStatus == TicketStatus.READY_TO_DEPLOY && newStatus == TicketStatus.DEPLOYED_DONE)
+                    );
+        }
+
+        return
                 (oldStatus == TicketStatus.TODO && newStatus == TicketStatus.IN_PROGRESS) ||
                         (oldStatus == TicketStatus.IN_PROGRESS && newStatus == TicketStatus.PAUSED) ||
                         (oldStatus == TicketStatus.PAUSED && newStatus == TicketStatus.IN_PROGRESS) ||
-                        (oldStatus == TicketStatus.IN_PROGRESS && newStatus == TicketStatus.PR_REVIEW)
-        ) {
-            return true;
-        }
-
-        return isAdmin && (
-                (oldStatus == TicketStatus.PR_REVIEW && newStatus == TicketStatus.READY_TO_DEPLOY) ||
-                        (oldStatus == TicketStatus.READY_TO_DEPLOY && newStatus == TicketStatus.DEPLOYED_DONE)
-        );
+                        (oldStatus == TicketStatus.IN_PROGRESS && newStatus == TicketStatus.PR_REVIEW);
     }
+
 
 
 

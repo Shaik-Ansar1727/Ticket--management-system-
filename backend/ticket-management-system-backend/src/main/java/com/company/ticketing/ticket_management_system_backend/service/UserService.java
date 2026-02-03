@@ -21,4 +21,14 @@ public interface UserService {
 
     UserResponse mapToUserResponse(User user);
 
+    List<User> getAllUsers();
+
+    void deleteUser(Long userId);
+
+    User updateUser(User user);
+
+    void changePassword(Long userId, String oldPassword, String newPassword);
+
+    void adminChangePassword(Long userId, String newPassword);
+
 }
