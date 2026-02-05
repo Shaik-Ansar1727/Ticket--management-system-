@@ -5,9 +5,10 @@ export const createTicketApi = async (formValues) => {
     title: formValues.title,
     description: formValues.description,
     label: formValues.label,
-    assignedToUserId: 1,
+    assignedToUserId: formValues.assignedToUserId,
     attachments: [],
   };
+
 
   const response = await instance.post("/tickets", payload);
   return response.data;
@@ -41,3 +42,19 @@ export const updateTicketStatusApi = async (ticketId, status) => {
 };
 
 
+export const getAssignableUsersApi = async () => {
+  const response = await instance.get("/users/assignable");
+  return response.data;
+};
+
+export const updateTicketApi = async (ticketId, payload) => {
+  const response = await instance.put(`/tickets/${ticketId}`, payload);
+  return response.data;
+};
+
+
+
+export const deleteTicketApi = async (ticketId) => {
+  const response = await instance.delete(`/tickets/${ticketId}`);
+  return response.data;
+};

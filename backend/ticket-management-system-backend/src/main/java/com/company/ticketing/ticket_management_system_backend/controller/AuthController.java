@@ -33,8 +33,6 @@ public class AuthController {
         user.setEmail(request.getEmail());
         user.setPassword(request.getPassword());
         user.setUsername(request.getUsername());
-        user.setDisplayPicture(request.getDisplayPicture());
-        user.setBio(request.getBio());
 
         userService.registerUser(user);
 

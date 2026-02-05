@@ -1,141 +1,132 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Typography, Spin, Select, Button, message } from "antd";
-import { getTicketByIdApi, updateTicketStatusApi } from "../api/ticket.api";
+import { Typography, Spin, Button, message } from "antd";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../context/AuthContext";
 
-const { Title, Text } = Typography;
+import {
+  getTicketByIdApi,
+  getAssignableUsersApi,
+} from "../api/ticket.api";
 
+import TicketComments from "../components/tickets/TicketComments";
+import TicketActions from "../components/tickets/TicketActions";
+import TicketInfo from "../components/tickets/TicketInfo";
+import EditTicketModal from "../components/tickets/EditTicketModal";
 
-const getAllowedStatuses = (currentStatus, role) => {
-  if (currentStatus === "DEPLOYED_DONE") {
-    return [];
-  }
-
-  const employeeStatuses = [
-    "TODO",
-    "PAUSED",
-    "IN_PROGRESS",
-    "PR_REVIEW",
-  ];
-
-  const adminOnlyStatuses = [
-    "READY_TO_DEPLOY",
-    "DEPLOYED_DONE",
-  ];
-
-  if (role === "ADMIN") {
-    return [...employeeStatuses, ...adminOnlyStatuses];
-  }
-
-  return employeeStatuses;
-};
+const { Text } = Typography;
 
 const TicketDetails = () => {
   const { ticketId } = useParams();
-  const [ticket, setTicket] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("");
+  const { role } = useAuth();
+  const queryClient = useQueryClient();
 
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const role = localStorage.getItem("role");
+  const { data: users = [] } = useQuery({
+    queryKey: ["assignable-users"],
+    queryFn: getAssignableUsersApi,
+    enabled: role === "ADMIN",
+    onError: () => {
+      message.error("Failed to load users");
+    },
+  });
 
-  useEffect(() => {
-    if (ticket) {
-      setStatus(ticket.status);
-    }
-  }, [ticket]);
+  const {
+    data: ticket,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["ticket", ticketId],
+    queryFn: () => getTicketByIdApi(ticketId),
+    enabled: !!ticketId,
+  });
 
-  useEffect(() => {
-    const fetchTicket = async () => {
-      try {
-        const data = await getTicketByIdApi(ticketId);
-        setTicket(data);
-      } catch (error) {
-        message.error("Failed to load ticket");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTicket();
-  }, [ticketId]);
-
-  const updateStatus = async () => {
-
-    if (status === ticket.status) {
-      message.warning("Status is already set");
-      return;
-    }
-
-    try {
-      await updateTicketStatusApi(ticketId, status);
-
-
-      setTicket(prev => ({ ...prev, status }));
-
-      message.success("Status updated");
-    } catch (error) {
-  const backendMessage =
-    error.response?.data?.message || "Failed to update status";
-
-  console.log("STATUS UPDATE ERROR:", backendMessage);
-  message.error(backendMessage);
-}
-
-
+  const getUsernameById = (id) => {
+    if (!id) return "—";
+    const user = users.find((u) => u.id === id);
+    return user ? user.username : "—";
   };
 
-  if (loading) return <Spin />;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
-  if (!ticket) return <Text>Ticket not found</Text>;
+  if (isError) {
+    return (
+      <div className="mt-10 text-center">
+        <Text type="danger">
+          {error?.response?.data?.message || "Failed to load ticket"}
+        </Text>
+      </div>
+    );
+  }
 
-
-  const allowedStatuses = getAllowedStatuses(ticket.status, role);
-
-  const statusOptions = allowedStatuses.map((s) => ({
-    label: s.replace(/_/g, " "),
-    value: s,
-  }));
+  if (!ticket) {
+    return (
+      <div className="mt-10 text-center text-gray-500">
+        Ticket not found
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <Title level={2}>{ticket.title}</Title>
-
-      <Text strong>Status:</Text> {ticket.status}
-      <br />
-      <Text strong>Label:</Text> {ticket.label}
-      <br /><br />
-
-      <Text strong>Description:</Text>
-      <p>{ticket.description}</p>
-
-      <br /><br />
+    <div className="h-[calc(100vh-80px)] bg-gray-100 px-4 py-4">
+      <div className="mx-auto max-w-5xl h-full rounded-xl bg-white shadow-sm flex flex-col">
 
 
-      {ticket.status === "DEPLOYED_DONE" ? (
-        <p style={{ color: "gray" }}>
-          This ticket is completed and cannot be modified.
-        </p>
-      ) : (
-        <>
-          <Select
-            value={status}
-            options={statusOptions}
-            onChange={setStatus}
-            style={{ width: 220 }}
+        <div className="sticky top-0 z-10 bg-white border-b px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-gray-800">
+            {ticket.title}
+          </h1>
+
+          {role === "ADMIN" && (
+            <Button type="primary" onClick={() => setIsEditOpen(true)}>
+              Edit Ticket
+            </Button>
+          )}
+        </div>
+
+        {role === "ADMIN" && (
+          <EditTicketModal
+            open={isEditOpen}
+            onClose={() => setIsEditOpen(false)}
+            ticket={ticket}
+            users={users}
+            onUpdated={() => {
+              queryClient.invalidateQueries(["ticket", ticketId]);
+            }}
           />
+        )}
 
-          <br /><br />
 
-          <Button
-            type="primary"
-            onClick={updateStatus}
-            disabled={status === ticket.status}
-          >
-            Update Status
-          </Button>
-        </>
-      )}
+        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+
+          <div className="rounded-lg bg-gray-50 p-4">
+            <TicketInfo
+              ticket={{
+                ...ticket,
+                createdByName: getUsernameById(ticket.createdByUser),
+                assignedToName: getUsernameById(ticket.assignedToUser),
+              }}
+            />
+          </div>
+
+          <div className="rounded-lg border bg-white p-4">
+            <TicketActions ticket={ticket} role={role} />
+          </div>
+
+          <div className="rounded-lg border bg-white p-4">
+            <TicketComments ticketId={ticketId} />
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,45 +1,95 @@
 import React from 'react'
 import { Link } from "react-router-dom"
+import { useAuth } from "../context/AuthContext";
 
-const role = localStorage.getItem("role");
-const isAdmin = role === "ADMIN";
+
 
 const Sidebar = () => {
+    const { role, loading } = useAuth();
+    if (loading) return null;
+
+    const isAdmin = role === "ADMIN";
+
     return (
-        <div>
-            <h1>Ticket Management System</h1>
+        <aside className="hidden md:block w-64 bg-gray-900 text-white min-h-screen shrink-0">
 
-            <nav>
-                <ul>
+
+            <div className="px-6 py-5 border-b border-gray-700">
+                <h1 className="text-lg font-semibold">
+                    Ticket Management
+                </h1>
+            </div>
+
+
+            <nav className="px-4 py-6">
+                <ul className="space-y-2">
                     <li>
-                        <Link to="profile">My Profile</Link>
+                        <Link
+                            to="profile"
+                            className="block rounded px-4 py-2 hover:bg-gray-800"
+                        >
+                            My Profile
+                        </Link>
                     </li>
 
                     <li>
-                        <Link to="tickets">Tickets</Link>
+                        <Link
+                            to="tickets"
+                            className="block rounded px-4 py-2 hover:bg-gray-800"
+                        >
+                            Tickets
+                        </Link>
                     </li>
 
-                    <li>
-                        <Link to="my-tickets">My Tickets</Link>
-                    </li>
+                    {role !== "ADMIN" && (
+                        <li>
+                            <Link
+                                to="my-tickets"
+                                className="block rounded px-4 py-2 hover:bg-gray-800"
+                            >
+                                My Tickets
+                            </Link>
+                        </li>
+                    )}
+
 
                     {isAdmin && (
                         <>
+
+
                             <li>
-                                <Link to="create-ticket">Create Ticket</Link>
+                                <Link
+                                    to="create-ticket"
+                                    className="block rounded px-4 py-2 hover:bg-gray-800"
+                                >
+                                    Create Ticket
+                                </Link>
                             </li>
+
                             <li>
-                                <Link to="admin/users">Pending Users</Link>
+                                <Link
+                                    to="admin/users"
+                                    className="block rounded px-4 py-2 hover:bg-gray-800"
+                                >
+                                    Pending Users
+                                </Link>
                             </li>
+
                             <li>
-                                <Link to="admin/all-users">All Users</Link>
+                                <Link
+                                    to="admin/all-users"
+                                    className="block rounded px-4 py-2 hover:bg-gray-800"
+                                >
+                                    All Users
+                                </Link>
                             </li>
                         </>
                     )}
                 </ul>
             </nav>
-        </div>
-    )
+        </aside>
+    );
+
 }
 
 export default Sidebar

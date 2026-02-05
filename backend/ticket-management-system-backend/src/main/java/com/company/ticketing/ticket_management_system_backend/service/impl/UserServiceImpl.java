@@ -1,5 +1,6 @@
 package com.company.ticketing.ticket_management_system_backend.service.impl;
 
+import com.company.ticketing.ticket_management_system_backend.dto.AssignableUserResponse;
 import com.company.ticketing.ticket_management_system_backend.dto.UserResponse;
 import com.company.ticketing.ticket_management_system_backend.entity.User;
 import com.company.ticketing.ticket_management_system_backend.enums.UserRole;
@@ -150,6 +151,22 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+
+
+    @Override
+    public List<AssignableUserResponse> getAssignableUsers() {
+
+        return userRepository
+                .findAllByRoleAndStatus(UserRole.EMPLOYEE, UserStatus.ACTIVE)
+                .stream()
+                .map(user -> new AssignableUserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail()
+                ))
+                .toList();
+    }
+
 
 
 

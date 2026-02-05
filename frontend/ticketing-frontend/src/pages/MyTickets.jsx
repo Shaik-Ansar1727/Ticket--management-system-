@@ -1,31 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Typography, Spin, Card } from "antd";
 import { useNavigate } from "react-router-dom";
 import { getMyTicketsApi } from "../api/ticket.api";
+import { useQuery } from "@tanstack/react-query";
 
 const { Title, Text } = Typography;
 
 const MyTickets = () => {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchMyTickets = async () => {
-      try {
-        const data = await getMyTicketsApi();
-        setTickets(data);
-      } catch (error) {
-        console.error("Failed to load my tickets", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const {
+    data: tickets = [],
+    isLoading,
+    isError
+  } = useQuery({
+    queryKey: ["my-tickets"],
+    queryFn: getMyTicketsApi,
+  });
 
-    fetchMyTickets();
-  }, []);
 
-  if (loading) return <Spin size="large" />;
+if (isLoading) return <Spin size="large" />;
+if (isError) return <Text type="danger">Failed to load tickets</Text>;
+
 
   return (
     <div>

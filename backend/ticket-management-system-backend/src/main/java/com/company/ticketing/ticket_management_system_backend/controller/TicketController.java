@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.company.ticketing.ticket_management_system_backend.dto.UpdateTicketRequest;
+
 
 import java.util.List;
 
@@ -171,6 +173,34 @@ public class TicketController {
                 ))
                 .toList();
         return ResponseEntity.ok(responses);
+    }
+
+
+    @PutMapping("/{ticketId}")
+    public ResponseEntity<TicketResponse> updateTicket(
+            @PathVariable Long ticketId,
+            @Valid @RequestBody UpdateTicketRequest request
+    ) {
+        Ticket ticket = ticketService.updateTicket(ticketId, request);
+
+        TicketResponse response = new TicketResponse(
+                ticket.getId(),
+                ticket.getTitle(),
+                ticket.getDescription(),
+                ticket.getLabel(),
+                ticket.getStatus(),
+                ticket.getCreatedBy().getId(),
+                ticket.getAssignedTo().getId(),
+                ticket.getAttachments()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{ticketId}")
+    public ResponseEntity<Void> deleteTicket(@PathVariable Long ticketId) {
+        ticketService.deleteTicket(ticketId);
+        return ResponseEntity.noContent().build(); // 204
     }
 
 

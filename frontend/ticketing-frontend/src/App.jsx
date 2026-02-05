@@ -1,32 +1,39 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import DashboardLayout from "./layout/DashboardLayout"
-import Dashboard from "./pages/Dashboard"
-import ProtectedRoute from "./components/ProtectedRouter"
-import Login from "./auth/Login"
-import Register from "./auth/Register"
-import "./App.css"
-import Home from "./pages/Home"
-import Tickets from "./pages/Tickets"
-import MyTickets from "./pages/MyTickets"
-import CreateTicket from "./pages/CreateTicket"
-import TicketDetails from "./pages/TicketDetails"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import DashboardLayout from "./layout/DashboardLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+
+import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import Tickets from "./pages/Tickets";
+import MyTickets from "./pages/MyTickets";
+import CreateTicket from "./pages/CreateTicket";
+import TicketDetails from "./pages/TicketDetails";
+import Profile from "./pages/Profile";
+
 import AdminUsers from "./pages/admin/AdminUsers";
 import AllUsers from "./pages/admin/AllUsers";
 import UserDetails from "./pages/admin/UserDetails";
-import Profile from "./pages/Profile";
+
+
+import { useAuth  } from "./context/AuthContext";
+import { Navigate } from "react-router-dom";
+import MyTicketsGuard from "./routes/MyTicketsGuard";
+
+
+import { GlobalStyles } from "./styles/GlobalStyles";
+import "./App.css";
 
 
 function App() {
   return (
     <BrowserRouter>
+      <GlobalStyles />
+
       <Routes>
 
         <Route path="/" element={<Home />} />
-
-        <Route path="/login" element={<Login />} />
-
-        <Route path="/register" element={<Register />} />
 
 
         <Route
@@ -39,7 +46,21 @@ function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="tickets" element={<Tickets />} />
-          <Route path="my-tickets" element={<MyTickets />} />
+          <Route path="tickets/:ticketId" element={<TicketDetails />} />
+          {/* <Route path="my-tickets" element={<MyTickets />} /> */}
+
+          <Route
+            path="my-tickets"
+            element={
+              <MyTicketsGuard>
+                <MyTickets />
+              </MyTicketsGuard>
+            }
+          />
+
+          <Route path="profile" element={<Profile />} />
+
+
           <Route
             path="create-ticket"
             element={
@@ -49,9 +70,6 @@ function App() {
             }
           />
 
-          <Route path="tickets/:ticketId" element={<TicketDetails />} />
-          <Route path="profile" element={<Profile />} />
-
           <Route
             path="admin/users"
             element={
@@ -60,6 +78,7 @@ function App() {
               </AdminRoute>
             }
           />
+
           <Route
             path="admin/all-users"
             element={
@@ -68,6 +87,7 @@ function App() {
               </AdminRoute>
             }
           />
+
           <Route
             path="admin/users/:userId"
             element={
@@ -76,14 +96,10 @@ function App() {
               </AdminRoute>
             }
           />
-
-
-
         </Route>
-
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

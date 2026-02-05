@@ -1,47 +1,52 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Table, Spin, Alert, Button, message } from "antd";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "../../api/axios";
 
 const AdminUsers = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchPendingUsers = async () => {
-      try {
-        const response = await axios.get("/admin/users/pending");
-        setUsers(response.data);
-      } catch (err) {
-        setError("Failed to load pending users");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPendingUsers();
-  }, []);
+  const queryClient = useQueryClient();
 
 
-  const handleApprove = async (userId) => {
-    try {
-      await axios.post(`/admin/users/${userId}/approve`);
+  const {
+    data: users = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["pending-users"],
+    queryFn: async () => {
+      const res = await axios.get("/admin/users/pending");
+      return res.data;
+    },
+    onError: () => {
+      message.error("Failed to load pending users");
+    },
+  });
+
+
+  const approveMutation = useMutation({
+    mutationFn: (userId) =>
+      axios.post(`/admin/users/${userId}/approve`),
+    onSuccess: () => {
       message.success("User approved successfully");
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-    } catch (err) {
+      queryClient.invalidateQueries(["pending-users"]);
+    },
+    onError: () => {
       message.error("Failed to approve user");
-    }
-  };
+    },
+  });
 
-  const handleReject = async (userId) => {
-    try {
-      await axios.post(`/admin/users/${userId}/reject`);
+
+  const rejectMutation = useMutation({
+    mutationFn: (userId) =>
+      axios.post(`/admin/users/${userId}/reject`),
+    onSuccess: () => {
       message.success("User rejected successfully");
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-    } catch (err) {
+      queryClient.invalidateQueries(["pending-users"]);
+    },
+    onError: () => {
       message.error("Failed to reject user");
-    }
-  };
+    },
+  });
 
   const columns = [
     {
@@ -63,11 +68,12 @@ const AdminUsers = () => {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <>
+        <div className="flex gap-2">
           <Button
             type="primary"
             size="small"
-            onClick={() => handleApprove(record.id)}
+            loading={approveMutation.isLoading}
+            onClick={() => approveMutation.mutate(record.id)}
           >
             Approve
           </Button>
@@ -75,28 +81,48 @@ const AdminUsers = () => {
           <Button
             danger
             size="small"
-            style={{ marginLeft: 8 }}
-            onClick={() => handleReject(record.id)}
+            loading={rejectMutation.isLoading}
+            onClick={() => rejectMutation.mutate(record.id)}
           >
             Reject
           </Button>
-        </>
+        </div>
       ),
     },
   ];
 
-  if (loading) return <Spin size="large" />;
-  if (error) return <Alert type="error" message={error} />;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[50vh]">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="mt-6">
+        <Alert type="error" message="Failed to load pending users" />
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h2>Pending User Registrations</h2>
-      <Table
-        dataSource={users}
-        columns={columns}
-        rowKey="id"
-        pagination={false}
-      />
+    <div className="space-y-6">
+
+      <h2 className="text-xl font-semibold text-gray-800">
+        Pending User Registrations
+      </h2>
+
+      <div className="rounded-lg bg-white p-4 shadow-sm">
+        <Table
+          dataSource={users}
+          columns={columns}
+          rowKey="id"
+          pagination={false}
+        />
+      </div>
+
     </div>
   );
 };

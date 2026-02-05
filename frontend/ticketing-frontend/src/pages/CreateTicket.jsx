@@ -1,9 +1,12 @@
 import React from "react";
 import { Form, Input, Select, Button, Typography, message } from "antd";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import axios from "../api/axios";
 import { createTicketApi } from "../api/ticket.api";
+
 const { Title } = Typography;
 const { TextArea } = Input;
-import { useState } from "react";
+
 const labelOptions = [
   { label: "BUG", value: "BUG" },
   { label: "FEATURE", value: "FEATURE" },
@@ -13,60 +16,126 @@ const labelOptions = [
 ];
 
 const CreateTicket = () => {
-  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
 
-  const onFinish = async (values) => {
-    try {
-      setLoading(true);
-      await createTicketApi(values);
+
+  const {
+    data: users = [],
+    isLoading: usersLoading,
+  } = useQuery({
+    queryKey: ["assignable-users"],
+    queryFn: async () => {
+      const res = await axios.get("/users/assignable");
+      return res.data;
+    },
+    onError: () => {
+      message.error("Failed to load users");
+    },
+  });
+
+
+  const createTicketMutation = useMutation({
+    mutationFn: createTicketApi,
+    onSuccess: () => {
       message.success("Ticket created successfully");
-    } catch (error) {
-      console.error(error);
-      message.error(error?.response?.data || "Failed to create ticket");
-    }
-    finally {
-      setLoading(false);
-    }
+      form.resetFields();
+    },
+    onError: (error) => {
+      message.error(
+        error?.response?.data?.message || "Failed to create ticket"
+      );
+    },
+  });
+
+  const onFinish = (values) => {
+    createTicketMutation.mutate(values);
   };
 
   return (
-    <div style={{ maxWidth: 500 }}>
-      <Title level={2}>Create Ticket</Title>
+    <div className="bg-gray-100 px-4 py-10">
+      <div className="mx-auto max-w-lg rounded-xl bg-white p-6 shadow-sm">
 
-      <Form layout="vertical" onFinish={onFinish}>
-        <Form.Item
-          label="Title"
-          name="title"
-          rules={[{ required: true, message: "Please enter ticket title" }]}
+        <Title level={2} className="mb-6 text-center">
+          Create Ticket
+        </Title>
+
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          className="space-y-2"
         >
-          <Input placeholder="Enter ticket title" />
-        </Form.Item>
+          <Form.Item
+            label="Title"
+            name="title"
+            rules={[
+              { required: true, message: "Please enter ticket title" },
+            ]}
+          >
+            <Input placeholder="Enter ticket title" />
+          </Form.Item>
 
-        <Form.Item
-          label="Description"
-          name="description"
-          rules={[{ required: true, message: "Please enter ticket description" }]}
-        >
-          <TextArea rows={4} placeholder="Enter ticket description" />
-        </Form.Item>
+          <Form.Item
+            label="Description"
+            name="description"
+            rules={[
+              {
+                required: true,
+                message: "Please enter ticket description",
+              },
+            ]}
+          >
+            <TextArea
+              rows={4}
+              placeholder="Enter ticket description"
+            />
+          </Form.Item>
 
-        <Form.Item
-          label="Label"
-          name="label"
-          rules={[{ required: true, message: "Please select a label" }]}
-        >
-          <Select
-            placeholder="Select label"
-            options={labelOptions}
-          />
-        </Form.Item>
+          <Form.Item
+            label="Label"
+            name="label"
+            rules={[
+              { required: true, message: "Please select a label" },
+            ]}
+          >
+            <Select
+              placeholder="Select label"
+              options={labelOptions}
+            />
+          </Form.Item>
 
-        <Form.Item>
-          <Button type="primary" htmlType="submit">
-            Create Ticket
-          </Button>
-        </Form.Item>
-      </Form>
+          <Form.Item
+            label="Assign To"
+            name="assignedToUserId"
+            rules={[
+              { required: true, message: "Please select a user" },
+            ]}
+          >
+            <Select
+              placeholder="Select user"
+              loading={usersLoading}
+              options={users.map((user) => ({
+                label: user.username,
+                value: user.id,
+              }))}
+              showSearch
+              optionFilterProp="label"
+            />
+          </Form.Item>
+
+          <Form.Item className="pt-2">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={createTicketMutation.isLoading}
+              block
+            >
+              Create Ticket
+            </Button>
+          </Form.Item>
+        </Form>
+
+      </div>
     </div>
   );
 };

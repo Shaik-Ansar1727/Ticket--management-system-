@@ -1,6 +1,7 @@
 package com.company.ticketing.ticket_management_system_backend.service.impl;
 
 import com.company.ticketing.ticket_management_system_backend.dto.CreateTicketRequest;
+import com.company.ticketing.ticket_management_system_backend.dto.UpdateTicketRequest;
 import com.company.ticketing.ticket_management_system_backend.entity.Ticket;
 import com.company.ticketing.ticket_management_system_backend.entity.TicketComment;
 import com.company.ticketing.ticket_management_system_backend.entity.TicketStatusHistory;
@@ -58,10 +59,21 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public Ticket createTicket(CreateTicketRequest request) {
 
-        User createdBy = getLoggedInUser();
+        User loggedInUser = getLoggedInUser();
 
-        User assignedTo = userRepository.findById(request.getAssignedToUserId())
-                .orElseThrow(() -> new RuntimeException("Assigned user not found"));
+        User assignedTo;
+
+        if (loggedInUser.getRole() == UserRole.ADMIN) {
+
+            assignedTo = userRepository.findById(request.getAssignedToUserId())
+                    .orElseThrow(() -> new RuntimeException("Assigned user not found"));
+
+        }
+        else {
+
+            assignedTo = loggedInUser;
+
+        }
 
         if (assignedTo.getStatus() != UserStatus.ACTIVE) {
             throw new RuntimeException("Assigned user is not ACTIVE");
@@ -71,13 +83,14 @@ public class TicketServiceImpl implements TicketService {
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
         ticket.setLabel(request.getLabel());
-        ticket.setCreatedBy(createdBy);
+        ticket.setCreatedBy(loggedInUser);
         ticket.setAssignedTo(assignedTo);
         ticket.setStatus(TicketStatus.TODO);
         ticket.setAttachments(request.getAttachments());
 
         return ticketRepository.save(ticket);
     }
+
 
     @Override
     public Ticket getTicketById(Long ticketId) {
@@ -106,6 +119,7 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
 
         if (ticket.getStatus() == TicketStatus.DEPLOYED_DONE) {
             throw new RuntimeException("Ticket is already deployed and cannot be modified");
@@ -212,4 +226,55 @@ public class TicketServiceImpl implements TicketService {
 
         return ticketCommentRepository.findAllByTickets(ticket);
     }
+
+    @Override
+    @Transactional
+    public Ticket updateTicket(Long ticketId, UpdateTicketRequest request) {
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        User assignedTo = userRepository.findById(request.getAssignedToUserId())
+                .orElseThrow(() -> new RuntimeException("Assigned user not found"));
+
+        if (assignedTo.getStatus() != UserStatus.ACTIVE) {
+            throw new RuntimeException("Assigned user must be ACTIVE");
+        }
+
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        ticket.setLabel(request.getLabel());
+        ticket.setAssignedTo(assignedTo);
+
+        return ticketRepository.save(ticket);
+    }
+
+
+    @Override
+    @Transactional
+    public void deleteTicket(Long ticketId) {
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        User loggedInUser = getLoggedInUser();
+
+        if (loggedInUser.getRole() != UserRole.ADMIN) {
+            throw new RuntimeException("Only ADMIN can delete tickets");
+        }
+
+        // delete comments first (FK safety)
+        ticketCommentRepository.deleteAll(
+                ticketCommentRepository.findAllByTickets(ticket)
+        );
+
+        // delete status history
+        ticketStatusHistoryRepository.deleteAll(
+                ticketStatusHistoryRepository.findStatusHistoryByTicket(ticket)
+        );
+
+        ticketRepository.delete(ticket);
+    }
+
+
 }

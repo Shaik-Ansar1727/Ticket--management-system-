@@ -3,6 +3,7 @@ package com.company.ticketing.ticket_management_system_backend.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -38,9 +39,13 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/users/**").hasAnyRole("ADMIN", "EMPLOYEE")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/tickets/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/tickets/**")
+                        .hasAnyRole("ADMIN")
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/tickets/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 );
+
 
 
         return http.build();

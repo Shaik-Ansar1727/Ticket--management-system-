@@ -23,9 +23,6 @@ public class RegisterRequest {
     @NotBlank
     private String username;
 
-    @NotBlank
-    private String displayPicture;
 
-    private String bio;
 
 }

@@ -1,43 +1,56 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Typography, Spin, Card } from "antd";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getAllTicketsApi } from "../api/ticket.api";
+import { useQuery } from "@tanstack/react-query";
 
 const { Title, Text } = Typography;
 
 const Tickets = () => {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const data = await getAllTicketsApi();
-        setTickets(data);
-      } catch (error) {
-        console.error("Failed to load tickets", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const {
+    data: tickets = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["tickets"],
+    queryFn: getAllTicketsApi,
+  });
 
-    fetchTickets();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <Spin size="large" />;
   }
 
-  return (
-    <div>
-      <Title level={2}>All Tickets</Title>
+  if (isError) {
+    return <Text type="danger">Failed to load tickets</Text>;
+  }
 
+  return (
+    <div className="space-y-4">
+      {/* Page Title */}
+      <Title level={2} className="mb-6">
+        All Tickets
+      </Title>
+
+      {/* Ticket List */}
       {tickets.map((ticket) => (
-        <Card key={ticket.id} style={{ marginBottom: 12 }}>
-          <Link to={`/dashboard/tickets/${ticket.id}`}>
-            <strong>{ticket.title}</strong>
-          </Link>
-          <Text type="secondary"> — {ticket.status}</Text>
+        <Card
+          key={ticket.id}
+          hoverable
+          onClick={() =>
+            navigate(`/dashboard/tickets/${ticket.id}`)
+          }
+          className="cursor-pointer rounded-lg shadow-sm hover:shadow-md transition"
+        >
+          <div className="flex items-center justify-between px-1 py-2">
+            <strong className="text-gray-800 text-base">
+              {ticket.title}
+            </strong>
+            <Text className="text-sm text-gray-500">
+              {ticket.status}
+            </Text>
+          </div>
         </Card>
       ))}
     </div>

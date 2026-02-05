@@ -1,6 +1,9 @@
 package com.company.ticketing.ticket_management_system_backend.service;
 
+import com.company.ticketing.ticket_management_system_backend.dto.AssignableUserResponse;
+import com.company.ticketing.ticket_management_system_backend.dto.UpdateTicketRequest;
 import com.company.ticketing.ticket_management_system_backend.dto.UserResponse;
+import com.company.ticketing.ticket_management_system_backend.entity.Ticket;
 import com.company.ticketing.ticket_management_system_backend.entity.User;
 
 import java.util.List;
@@ -30,5 +33,8 @@ public interface UserService {
     void changePassword(Long userId, String oldPassword, String newPassword);
 
     void adminChangePassword(Long userId, String newPassword);
+
+    List<AssignableUserResponse> getAssignableUsers();
+
 
 }

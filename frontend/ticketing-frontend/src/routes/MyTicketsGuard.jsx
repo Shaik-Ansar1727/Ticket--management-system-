@@ -1,19 +1,16 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-
-const AdminRoute = ({ children }) => {
+const MyTicketsGuard = ({ children }) => {
   const { role, loading } = useAuth();
 
-  if (loading) {
-    return null; 
-  }
+  if (loading) return null;
 
-  if (role !== "ADMIN") {
+  if (role === "ADMIN") {
     return <Navigate to="/dashboard" replace />;
   }
 
   return children;
 };
 
-export default AdminRoute;
+export default MyTicketsGuard;

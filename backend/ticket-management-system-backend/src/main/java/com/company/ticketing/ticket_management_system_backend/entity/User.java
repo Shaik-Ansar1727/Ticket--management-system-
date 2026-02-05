@@ -31,7 +31,7 @@ public class User {
     @Column(nullable = false)
     String username;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     String displayPicture;
 
     @Column(nullable = true)

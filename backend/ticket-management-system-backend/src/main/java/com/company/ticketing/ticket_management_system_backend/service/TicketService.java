@@ -2,6 +2,7 @@ package com.company.ticketing.ticket_management_system_backend.service;
 
 import com.company.ticketing.ticket_management_system_backend.dto.CreateTicketRequest;
 import com.company.ticketing.ticket_management_system_backend.dto.TicketResponse;
+import com.company.ticketing.ticket_management_system_backend.dto.UpdateTicketRequest;
 import com.company.ticketing.ticket_management_system_backend.entity.Ticket;
 import com.company.ticketing.ticket_management_system_backend.entity.TicketComment;
 import com.company.ticketing.ticket_management_system_backend.entity.TicketStatusHistory;
@@ -28,5 +29,9 @@ public interface TicketService {
     TicketComment addComment(Long ticketId, String content);
 
     List<TicketComment> getCommentsForTicket(Long ticketId);
+
+    Ticket updateTicket(Long ticketId, UpdateTicketRequest request);
+
+    void deleteTicket(Long ticketId);
 
 }
